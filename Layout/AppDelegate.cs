@@ -47,7 +47,7 @@ namespace UISample
         static extern IntPtr AXValueGetValue(IntPtr cfTypePtr, int valueType, ref CGRect cgRect);
 
         [DllImport(ApplicationServices)]
-        static extern IntPtr AXUIElementSetAttributeValue(IntPtr element, IntPtr attribute, IntPtr value);
+        static extern IntPtr AXUIElementSetAttributeValue(IntPtr element, IntPtr attribute, CGRect value);
         //AXError AXUIElementSetAttributeValue(AXUIElementRef element, CFStringRef attribute, CFTypeRef value);
 
         [DllImport(CoreGraphics)]
@@ -167,5 +167,15 @@ namespace UISample
             return attribPtr;
         }
 
+        private IntPtr SetAttributePtr(IntPtr axUIElementPtr, string attributeName, CGRect attribPtr)
+        {
+            return AXUIElementSetAttributeValue(axUIElementPtr, new CFString(attributeName).Handle, attribPtr);
+        }
+
+        private IntPtr SetFrame(IntPtr axUIElementPtr, int x, int y, int width, int height)
+        {
+            var rect = new CGRect(x, y, width, height);
+            return SetAttributePtr(axUIElementPtr, "AXFrame", rect);
+        }
     }
 }
