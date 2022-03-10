@@ -140,6 +140,9 @@ namespace UISample
                     {
                         GetUIElementChildren(axUIElementPtr);
                     }
+
+                    SetFrame(namesPtr, 0, 0, 500, 500);
+
                     CFRelease(axUIElementPtr);
                     i++;
                 }
