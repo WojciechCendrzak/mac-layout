@@ -46,6 +46,10 @@ namespace UISample
         [DllImport(ApplicationServices)]
         static extern IntPtr AXValueGetValue(IntPtr cfTypePtr, int valueType, ref CGRect cgRect);
 
+        [DllImport(ApplicationServices)]
+        static extern IntPtr AXUIElementSetAttributeValue(IntPtr element, IntPtr attribute, IntPtr value);
+        //AXError AXUIElementSetAttributeValue(AXUIElementRef element, CFStringRef attribute, CFTypeRef value);
+
         [DllImport(CoreGraphics)]
         static extern IntPtr CFArrayGetValueAtIndex(IntPtr element, int index);
 
