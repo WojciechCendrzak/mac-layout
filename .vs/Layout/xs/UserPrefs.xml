@@ -1,0 +1,25 @@
+﻿<Properties StartupConfiguration="{9C94816E-92E9-434A-B1D1-C1421D19F646}|Default">
+  <MonoDevelop.Ide.ItemProperties.Layout FirstBuild="True" PreferredExecutionTarget="Test1" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Layout/AppDelegate.cs">
+    <Files>
+      <File FileName="Layout/AppDelegate.cs" Line="4" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="Layout" expanded="True">
+            <Node name="Layout" expanded="True">
+              <Node name="AppDelegate.cs" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>
