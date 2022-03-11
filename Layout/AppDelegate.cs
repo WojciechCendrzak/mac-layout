@@ -77,9 +77,16 @@ namespace UISample
 
         public override void DidFinishLaunching(NSNotification notification)
         {
+            var appName = "iTerm2";
             if (AXAPIEnabled())
             {
-                var app = GetWindowByName("iTerm");
+                var app = GetWindowByName(appName);
+                if (app == null)
+                {
+                    Console.WriteLine($"{appName} not found");
+                    return;
+
+                }
                 var pid = app.ValueForKey((NSString)"kCGWindowOwnerPID");
                 var pidi = int.Parse(pid.ToString());
                 GetUIElementsFromPID(pidi);
@@ -93,10 +100,44 @@ namespace UISample
         private void GetUIElementsFromPID(int pid)
         {
             var ax_app = AXUIElementCreateApplication(pid);
-            GetUIElementChildren(ax_app);
+            GetUIElements(ax_app);
         }
 
-        private void GetUIElementChildren(IntPtr parentAXUIElementRef)
+        private void GetUIElements(IntPtr parentAXUIElementRef)
+        {
+            IntPtr framePtr = getAttribute(parentAXUIElementRef, "AXFrame");
+            Console.WriteLine($"top frame: {GetFrameAttribute(framePtr)}");
+
+            enumerateAttributes(parentAXUIElementRef);
+
+            IntPtr windowsPtr = getAttribute(parentAXUIElementRef, "AXWindows");
+
+            Console.WriteLine($"windowsPtr ------ {windowsPtr}");
+
+            var windows = NSArray.ArrayFromHandle<NSObject>(windowsPtr);
+
+            for (int i = 0; i < windows.Length; i++)
+            {
+                Console.WriteLine($"window: {i}");
+
+                var windowPtr = CFArrayGetValueAtIndex(windowsPtr, i);
+                enumerateAttributes(windowPtr);
+            }
+
+            enumerateAttributes(windowsPtr);
+
+
+            //enumerateChildrens(parentAXUIElementRef);
+        }
+
+        private IntPtr getAttribute(IntPtr parent, string name)
+        {
+            IntPtr attrPtr = IntPtr.Zero;
+            AXUIElementCopyAttributeValues(parent, new CFString(name).Handle, 0, 99999, ref attrPtr);
+            return attrPtr;
+        }
+
+        private void enumerateChildrens(IntPtr parentAXUIElementRef)
         {
             var kAXChildren = new CFString("AXChildren");
             IntPtr attribValuesPtr = IntPtr.Zero;
@@ -109,39 +150,47 @@ namespace UISample
                 {
                     var axUIElementPtr = CFArrayGetValueAtIndex(attribValuesPtr, i);
                     // Get every attributes
-                    IntPtr namesPtr = IntPtr.Zero;
-                    AXUIElementCopyAttributeNames(axUIElementPtr, ref namesPtr);
-                    var attributes = NSArray.ArrayFromHandle<NSObject>(namesPtr);
-                    foreach (var attrib in attributes)
-                    {
-                        Console.WriteLine(attrib.Description);
-                        switch (attrib.Description)
-                        {
-                            case "AXTitle":
-                            case "AXIdentifier":
-                            case "AXHelp":
-                            case "AXRole":
-                            case "AXSubRole":
-                            case "AXRoleDescription":
-                            case "AXValue":
-                                Console.WriteLine(attrib.Description + ":" + GetStringAttribute(axUIElementPtr, attrib.Description));
-                                break;
-                            case "AXEnabled":
-                            case "AXFocused":
-                                // I beg you please show me an example to get a boolean attribute.
-                                break;
-                            case "AXFrame":
-                                Console.WriteLine(attrib.Description + ":" + GetFrameAttribute(axUIElementPtr));
-                                break;
-                        }
-                    }
+                    Console.WriteLine($"i: {i}");
 
-                    if (children.Length > 0)
-                    {
-                        GetUIElementChildren(axUIElementPtr);
-                    }
+                    enumerateAttributes(axUIElementPtr);
+                    //IntPtr namesPtr = IntPtr.Zero;
+                    //AXUIElementCopyAttributeNames(axUIElementPtr, ref namesPtr);
+                    //var attributes = NSArray.ArrayFromHandle<NSObject>(namesPtr);
+                    //Console.WriteLine($"i: {i}");
 
-                    SetFrame(namesPtr, 0, 0, 500, 500);
+                    //foreach (var attrib in attributes)
+                    //{
+                    //    switch (attrib.Description)
+                    //    {
+                    //        //case "AXFullScreen":
+                    //        case "AXTitle":
+                    //        case "AXIdentifier":
+                    //        case "AXHelp":
+                    //        case "AXRole":
+                    //        case "AXSubRole":
+                    //        case "AXRoleDescription":
+                    //        case "AXValue":
+                    //            Console.WriteLine(attrib.Description + ":" + GetStringAttribute(axUIElementPtr, attrib.Description));
+                    //            break;
+                    //        case "AXEnabled":
+                    //        case "AXFocused":
+                    //            // I beg you please show me an example to get a boolean attribute.
+                    //            break;
+                    //        case "AXFrame":
+                    //            Console.WriteLine(attrib.Description + ":" + GetFrameAttribute(axUIElementPtr));
+                    //            break;
+                    //        default:
+                    //            //Console.WriteLine(attrib.Description);
+                    //            break;
+                    //    }
+                    //}
+
+                    //if (children.Length > 0)
+                    //{
+                    //    GetUIElementChildren(axUIElementPtr);
+                    //}
+
+                    //SetFrame(namesPtr, 0, 0, 500, 500);
 
                     CFRelease(axUIElementPtr);
                     i++;
@@ -149,9 +198,46 @@ namespace UISample
             }
         }
 
+        private void enumerateAttributes(IntPtr axUIElementPtr)
+        {
+            IntPtr namesPtr = IntPtr.Zero;
+            AXUIElementCopyAttributeNames(axUIElementPtr, ref namesPtr);
+            var attributes = NSArray.ArrayFromHandle<NSObject>(namesPtr);
+
+            foreach (var attrib in attributes)
+            {
+                switch (attrib.Description)
+                {
+                    //case "AXFullScreen":
+                    case "AXTitle":
+                    case "AXIdentifier":
+                    case "AXHelp":
+                    case "AXRole":
+                    case "AXSubRole":
+                    case "AXRoleDescription":
+                    case "AXValue":
+                        Console.WriteLine(attrib.Description + ":" + GetStringAttribute(axUIElementPtr, attrib.Description));
+                        break;
+                    case "AXEnabled":
+                    case "AXFocused":
+                        // I beg you please show me an example to get a boolean attribute.
+                        break;
+                    case "AXFrame":
+                        Console.WriteLine(attrib.Description + ":" + GetFrameAttribute(axUIElementPtr));
+                        break;
+                    case "AXPosition":
+                        Console.WriteLine(attrib.Description + ":" + GetFrameAttribute(axUIElementPtr));
+                        break;
+                    default:
+                        Console.WriteLine(attrib.Description);
+                        break;
+                }
+            }
+        }
+
         private string GetStringAttribute(IntPtr axUIElementPtr, string attributeName)
         {
-            return NSString.FromHandle(GetAttributePtr(axUIElementPtr, attributeName));
+            return CFString.FromHandle(GetAttributePtr(axUIElementPtr, attributeName));
         }
 
         private CGRect GetFrameAttribute(IntPtr axUIElementPtr)

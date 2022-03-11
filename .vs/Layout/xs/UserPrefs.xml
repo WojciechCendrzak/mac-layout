@@ -1,14 +1,15 @@
 ﻿<Properties StartupConfiguration="{9C94816E-92E9-434A-B1D1-C1421D19F646}|Default">
-  <MonoDevelop.Ide.ItemProperties.Layout FirstBuild="True" PreferredExecutionTarget="Test1" />
+  <MonoDevelop.Ide.ItemProperties.Layout PreferredExecutionTarget="Test1" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Layout/AppDelegate.cs">
     <Files>
-      <File FileName="Layout/AppDelegate.cs" Line="172" Column="1" />
+      <File FileName="Layout/AppDelegate.cs" Line="115" Column="68" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
           <Node name="Layout" expanded="True">
             <Node name="Layout" expanded="True">
+              <Node name="References" expanded="True" />
               <Node name="AppDelegate.cs" selected="True" />
             </Node>
           </Node>
