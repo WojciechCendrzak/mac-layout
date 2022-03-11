@@ -42,6 +42,12 @@ namespace UISample
         static extern IntPtr AXValueCreate(int valueType, ref CGRect cgRect);
 
         [DllImport(ApplicationServices)]
+        static extern IntPtr AXValueCreate(int valueType, ref CGPoint cgPoint);
+
+        [DllImport(ApplicationServices)]
+        static extern IntPtr AXValueCreate(int valueType, ref CGSize cgSize);
+
+        [DllImport(ApplicationServices)]
         static extern IntPtr AXValueGetValue(IntPtr cfTypePtr, int valueType, ref bool boolValue);
 
         [DllImport(ApplicationServices)]
@@ -239,6 +245,18 @@ namespace UISample
             Debug.WriteLine($"SetFrameAttibute done error {error}");
 
             //kAXErrorAttributeUnsupported = -25205
+
+            CGPoint point = new CGPoint(11, 11);
+            var pointPtr = AXValueCreate(kAXValueCGPointType, ref point);
+            var error2 = AXUIElementSetAttributeValue(axUIElementPtr, new CFString("AXPosition").Handle, pointPtr);
+            Debug.WriteLine($"SetFrameAttibute done error2 {error2}");
+
+            CGSize size = new CGSize(500, 500);
+            var sizePtr = AXValueCreate(kAXValueCGSizeType, ref size);
+            var error3 = AXUIElementSetAttributeValue(axUIElementPtr, new CFString("AXSize").Handle, sizePtr);
+            Debug.WriteLine($"SetFrameAttibute done error3 {error3}");
+
+            //Udalo sie !!!
 
         }
 
