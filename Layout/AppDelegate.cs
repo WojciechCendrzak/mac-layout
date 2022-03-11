@@ -48,7 +48,7 @@ namespace UISample
         static extern IntPtr AXValueGetValue(IntPtr cfTypePtr, int valueType, ref CGRect cgRect);
 
         [DllImport(ApplicationServices)]
-        static extern IntPtr AXUIElementSetAttributeValue(IntPtr element, IntPtr attribute, IntPtr value);
+        static extern int AXUIElementSetAttributeValue(IntPtr element, IntPtr attribute, IntPtr value);
         //AXError AXUIElementSetAttributeValue(AXUIElementRef element, CFStringRef attribute, CFTypeRef value);
 
         [DllImport(CoreGraphics)]
@@ -66,7 +66,13 @@ namespace UISample
 
         public override void DidFinishLaunching(NSNotification notification)
         {
-            var appName = "iTerm2";
+            if (!AXAPIEnabled())
+            {
+                Debug.WriteLine("API Disabled.");
+                return;
+            }
+
+            var appName = "Notes";
 
             var frame = GetMainFrame(appName);
             Debug.WriteLine($"main {appName} frame: {frame}");
@@ -101,11 +107,6 @@ namespace UISample
 
         private IntPtr getMainWindow(string appName)
         {
-            if (!AXAPIEnabled())
-            {
-                Debug.WriteLine("API Disabled.");
-                return IntPtr.Zero;
-            }
             var app = GetWindowByName(appName);
             if (app == null)
             {
@@ -230,11 +231,15 @@ namespace UISample
             var framePtr = AXValueCreate(kAXValueCGRectType, ref frame);
             Debug.WriteLine($"AXValueCreate framePtr {framePtr}");
 
-            var frmtest = GetFrameAttribute(framePtr);
-            Debug.WriteLine($"AXValueCreate frmtest {frmtest}");
+            CGRect frameTest1 = new CGRect(0, 0, 0, 0);
+            AXValueGetValue(framePtr, kAXValueCGRectType, ref frameTest1);
+            Debug.WriteLine($"AXValueCreate frameTest1 {frameTest1}");
 
-            AXUIElementSetAttributeValue(axUIElementPtr, new CFString("AXFrame").Handle, framePtr);
-            Debug.WriteLine("SetFrameAttibute done");
+            var error = AXUIElementSetAttributeValue(axUIElementPtr, new CFString("AXFrame").Handle, framePtr);
+            Debug.WriteLine($"SetFrameAttibute done error {error}");
+
+            //kAXErrorAttributeUnsupported = -25205
+
         }
 
 
