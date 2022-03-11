@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using AppKit;
@@ -34,14 +35,14 @@ namespace UISample
         [DllImport(ApplicationServices)]
         static extern IntPtr AXUIElementCopyAttributeNames(IntPtr element, ref IntPtr pointer);
 
-        [DllImport(ApplicationServices)]
-        static extern IntPtr AXValueCreate(int valueType, ref bool boolValue);
-
-        [DllImport(ApplicationServices)]
-        static extern IntPtr AXValueGetValue(IntPtr cfTypePtr, int valueType, ref bool boolValue);
+        //[DllImport(ApplicationServices)]
+        //static extern IntPtr AXValueCreate(int valueType, ref bool boolValue);
 
         [DllImport(ApplicationServices)]
         static extern IntPtr AXValueCreate(int valueType, ref CGRect cgRect);
+
+        [DllImport(ApplicationServices)]
+        static extern IntPtr AXValueGetValue(IntPtr cfTypePtr, int valueType, ref bool boolValue);
 
         [DllImport(ApplicationServices)]
         static extern IntPtr AXValueGetValue(IntPtr cfTypePtr, int valueType, ref CGRect cgRect);
@@ -63,39 +64,31 @@ namespace UISample
         {
         }
 
-        public static NSDictionary[] CopyWindowInfo(CGWindowListOption options, uint relativeToWindowId)
-        {
-            return NSArray.ArrayFromHandle<NSDictionary>(CGWindowListCopyWindowInfo(options, relativeToWindowId));
-        }
-
-        public static NSDictionary GetWindowByName(string name)
-        {
-            return CopyWindowInfo(CGWindowListOption.OnScreenOnly, 0)
-                .Where(w => w.ValueForKey((NSString)"kCGWindowOwnerName").ToString() == name)
-                .FirstOrDefault();
-        }
-
         public override void DidFinishLaunching(NSNotification notification)
         {
             var appName = "iTerm2";
 
-            var frame = getMainFrame(appName);
-            Console.WriteLine($"main {appName} frame: {frame}");
-            frame.X += 20;
-            Console.WriteLine($"new frame: {frame}");
+            var frame = GetMainFrame(appName);
+            Debug.WriteLine($"main {appName} frame: {frame}");
 
-            setMainFrame(appName, frame);
+            var newFrame = new CGRect(frame.X + 20, frame.Y, frame.Width, frame.Height);
+            Debug.WriteLine($"new frame: {newFrame}");
+            setMainFrame(appName, newFrame);
 
-            var frameAfter = getMainFrame(appName);
-            Console.WriteLine($"main {appName} frame after: {frameAfter}");
+            var frameAfter = GetMainFrame(appName);
+            Debug.WriteLine($"main {appName} frame after: {frameAfter}");
 
-//TODO: dont work
+            var itWorks = frame.X != frameAfter.X;
+            Debug.WriteLine($"itWorks {itWorks}");
+
+            //TODO: dont work
 
         }
 
-        private CGRect getMainFrame(string appName)
+        private CGRect GetMainFrame(string appName)
         {
             var windowPtr = getMainWindow(appName);
+            //enumerateAttributes(windowPtr);
             var frame = GetFrameAttribute(windowPtr);
             return frame;
         }
@@ -110,13 +103,13 @@ namespace UISample
         {
             if (!AXAPIEnabled())
             {
-                Console.WriteLine("API Disabled.");
+                Debug.WriteLine("API Disabled.");
                 return IntPtr.Zero;
             }
             var app = GetWindowByName(appName);
             if (app == null)
             {
-                Console.WriteLine($"{appName} not found");
+                Debug.WriteLine($"{appName} not found");
                 return IntPtr.Zero;
 
             }
@@ -130,12 +123,24 @@ namespace UISample
 
             if (window == null)
             {
-                Console.WriteLine($"no main window");
+                Debug.WriteLine($"no main window");
                 return IntPtr.Zero;
             }
 
             var windowPtr = CFArrayGetValueAtIndex(windowsPtr, 0);
             return windowPtr;
+        }
+
+        public static NSDictionary[] CopyWindowInfo(CGWindowListOption options, uint relativeToWindowId)
+        {
+            return NSArray.ArrayFromHandle<NSDictionary>(CGWindowListCopyWindowInfo(options, relativeToWindowId));
+        }
+
+        public static NSDictionary GetWindowByName(string name)
+        {
+            return CopyWindowInfo(CGWindowListOption.OnScreenOnly, 0)
+                .Where(w => w.ValueForKey((NSString)"kCGWindowOwnerName").ToString() == name)
+                .FirstOrDefault();
         }
 
         private IntPtr getAttribute(IntPtr parent, string name)
@@ -158,7 +163,7 @@ namespace UISample
                 {
                     var axUIElementPtr = CFArrayGetValueAtIndex(attribValuesPtr, i);
 
-                    Console.WriteLine($"i: {i}");
+                    Debug.WriteLine($"i: {i}");
 
                     enumerateAttributes(axUIElementPtr);
 
@@ -185,20 +190,20 @@ namespace UISample
                     case "AXSubRole":
                     case "AXRoleDescription":
                     case "AXValue":
-                        Console.WriteLine(attrib.Description + ":" + GetStringAttribute(axUIElementPtr, attrib.Description));
+                        Debug.WriteLine(attrib.Description + ":" + GetStringAttribute(axUIElementPtr, attrib.Description));
                         break;
                     case "AXEnabled":
                     case "AXFocused":
                         // I beg you please show me an example to get a boolean attribute.
                         break;
                     case "AXFrame":
-                        Console.WriteLine(attrib.Description + ":" + GetFrameAttribute(axUIElementPtr));
+                        Debug.WriteLine(attrib.Description + ":" + GetFrameAttribute(axUIElementPtr));
                         break;
                     case "AXPosition":
-                        Console.WriteLine(attrib.Description + ":" + GetFrameAttribute(axUIElementPtr));
+                        Debug.WriteLine(attrib.Description + ":" + GetFrameAttribute(axUIElementPtr));
                         break;
                     default:
-                        Console.WriteLine(attrib.Description);
+                        Debug.WriteLine(attrib.Description);
                         break;
                 }
             }
@@ -214,15 +219,22 @@ namespace UISample
             var attribPtr = GetAttributePtr(axUIElementPtr, "AXFrame");
             CGRect rect = new CGRect(0, 0, 0, 0);
             AXValueGetValue(attribPtr, kAXValueCGRectType, ref rect);
-            AXValueCreate(kAXValueCGRectType, ref rect);
             return rect;
         }
 
         private void SetFrameAttibute(IntPtr axUIElementPtr, CGRect frame)
         {
+
+            Debug.WriteLine($"AXValueCreate frame {frame}");
+
             var framePtr = AXValueCreate(kAXValueCGRectType, ref frame);
+            Debug.WriteLine($"AXValueCreate framePtr {framePtr}");
+
+            var frmtest = GetFrameAttribute(framePtr);
+            Debug.WriteLine($"AXValueCreate frmtest {frmtest}");
+
             AXUIElementSetAttributeValue(axUIElementPtr, new CFString("AXFrame").Handle, framePtr);
-            Console.WriteLine("SetFrameAttibute done");
+            Debug.WriteLine("SetFrameAttibute done");
         }
 
 
@@ -233,6 +245,5 @@ namespace UISample
             AXUIElementCopyAttributeValue(axUIElementPtr, new CFString(attributeName).Handle, ref attribPtr);
             return attribPtr;
         }
-
     }
 }
